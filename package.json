@@ -4,6 +4,7 @@
     "start": "node src/server.js"
   },
   "dependencies": {
+    "@prisma/client": "^3.8.1",
     "dotenv": "^14.3.2",
     "express": "^4.17.2",
     "nodemon": "^2.0.15",
@@ -22,5 +23,13 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mulori/eduwi-backend-nodejs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mulori/eduwi-backend-nodejs/issues"
+  },
+  "homepage": "https://github.com/Mulori/eduwi-backend-nodejs#readme",
   "description": ""
 }
