@@ -5,7 +5,8 @@ module.exports = {
             eduwi: 'Welcome to backend service eduwi',
             created: 'Service created in 2022-01-29',
             developed_by: 'Murilo Henrique Garcia Rodrigues',
-            developer_nationality: 'Brazil'
+            developer_nationality: 'Brazil',            
+            hosted_in: "Plataform Digital Ocean"
         });
     },
 };
