@@ -1,9 +1,10 @@
 {
-    "scripts": { 
-    "dev": "nodemon src/server.js", 
+  "scripts": {
+    "dev": "nodemon src/server.js",
     "start": "node src/server.js"
   },
   "dependencies": {
+    "dotenv": "^14.3.2",
     "express": "^4.17.2",
     "nodemon": "^2.0.15",
     "pg": "^8.7.1",
