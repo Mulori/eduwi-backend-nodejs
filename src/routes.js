@@ -11,20 +11,14 @@ routes.get('/welcome', WelcomeController.Welcome);
 routes.post('/users', async (req, res) => {
     const key_auth_pub = req.header('key_auth');
     const { firebase_uid, email, name, last_name } = req.body;
-    const key_auth = process.env.key_auth;
-
-    // if(key_auth_pub !== key_auth){
-    //     return res.status(403).json({
-    //         error_message: 'The server refused your request'
-    //     })
-    // }
-
-    if(key_auth_pub.length !== 65){
-        return res.status(403).json({
-            error_message: 'The server refused your request'
+    const key_auth = process.env.KEY_AUTH;
+    
+    if(key_auth_pub !== key_auth){
+        return res.status(400).json({
+            error_message: 'The server refused the request'
         })
     }
-    
+
     if(!firebase_uid || !email || !name || !last_name){
         return res.status(400).json({
             error_message: 'Incorrect request'
