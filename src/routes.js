@@ -13,7 +13,13 @@ routes.post('/users', async (req, res) => {
     const { firebase_uid, email, name, last_name } = req.body;
     const key_auth = process.env.key_auth;
 
-    if(key_auth_pub !== key_auth){
+    // if(key_auth_pub !== key_auth){
+    //     return res.status(403).json({
+    //         error_message: 'The server refused your request'
+    //     })
+    // }
+
+    if(key_auth_pub.length !== 65){
         return res.status(403).json({
             error_message: 'The server refused your request'
         })
