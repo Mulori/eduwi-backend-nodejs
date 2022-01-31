@@ -311,6 +311,37 @@ routes.get('/community/info', async (req, res) => {
        
 })
 
+routes.get('/community/user/info', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }    
+
+    const ssql1 = "select distinct c.id, c.title, c.description, u.name, (select count(id) from user_community where community_id = c.id) as quantity_members,";
+    const ssql2 = " (select count(id) from user_community where user_uid = '" + firebase_uid + "' and community_id = c.id) as entered, c.with_password from user_community as uc";
+    const ssql3 = " inner join users u on(uc.user_uid = u.firebase_uid) inner join community c on(c.id = uc.community_id) where uc.user_uid = '" + firebase_uid  + "' order by title asc";
+
+    const string_sql = ssql1.concat(" ").concat(ssql2).concat(" ").concat(ssql3)      
+
+    await prisma.$queryRawUnsafe(string_sql)
+    .then((json) => {
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })
+       
+})
+
 
 
 routes.post('/community/group', async (req, res) => {
