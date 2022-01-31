@@ -160,7 +160,7 @@ routes.get('/community', async (req, res) => {
     })
 })
 
-routes.get('/community/:id', async (req, res) => {
+routes.get('/community/:id/info', async (req, res) => {
     const { id } = req.params
     const firebase_uid = req.header('firebase_uid');
 
@@ -240,6 +240,37 @@ routes.get('/community/:id/users', async (req, res) => {
     }    
 
     await prisma.$queryRawUnsafe('select u.id, u.email, u.name, u.last_name from  user_community uc inner join users u on(uc.user_uid = u.firebase_uid) where uc.community_id = ' + id)
+    .then((json) => {
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })
+       
+})
+
+routes.get('/community/info', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }    
+
+    const ssql1 = "select c.id, c.title, c.description, u.name, (select count(id) from user_community where community_id = c.id) as quantity_members,";
+    const ssql2 = "(select count(id) from user_community where user_uid = '" + firebase_uid + "' and community_id = c.id) as entered from community as c";
+    const ssql3 = "inner join users u on(c.author_uid = u.firebase_uid) order by title asc";
+
+    const string_sql = ssql1.concat(" ").concat(ssql2).concat(" ").concat(ssql3)      
+
+    await prisma.$queryRawUnsafe(string_sql)
     .then((json) => {
         return res.status(200).json(json)
     })
