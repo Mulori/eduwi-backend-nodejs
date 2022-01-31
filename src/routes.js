@@ -311,7 +311,7 @@ routes.get('/community/info', async (req, res) => {
        
 })
 
-routes.get('/community/user/info', async (req, res) => {
+routes.get('/community/user/v1/info', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
 
     const valid = await prisma.users.findUnique({
