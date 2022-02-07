@@ -342,6 +342,29 @@ routes.get('/community/user/v1/info', async (req, res) => {
        
 })
 
+routes.get('/menu/main/config', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }           
+
+    await prisma.menu_main_activity.findMany()
+    .then((json) => {
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })       
+})
 
 
 routes.post('/community/group', async (req, res) => {

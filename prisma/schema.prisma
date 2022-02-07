@@ -57,3 +57,12 @@ model user_group_community {
   group_community group_community? @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_group")
   users           users?           @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_group")
 }
+
+model menu_main_activity {
+  id               Int     @id @default(autoincrement())
+  title            String  @db.VarChar(30)
+  name_icon        String? @db.VarChar(30)
+  color_icon       String? @db.VarChar(20)
+  color_title      String? @db.VarChar(20)
+  color_background String? @db.VarChar(20)
+}
