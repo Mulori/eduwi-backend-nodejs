@@ -105,6 +105,60 @@ routes.get('/users/:uid', async (req, res) => {
     })
 })
 
+routes.get('/menu/main/config', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }           
+
+    await prisma.menu_main_activity.findMany()
+    .then((json) => {
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })       
+})
+
+routes.get('/activity', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }    
+
+    const ssql1 = "select title, with_password, type_activity, name || ' ' || last_name as name from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null";
+
+    await prisma.$queryRawUnsafe(ssql1)
+    .then((json) => {
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })
+       
+})
+
+
+
+
 
 
 
@@ -341,34 +395,6 @@ routes.get('/community/user/v1/info', async (req, res) => {
     })
        
 })
-
-routes.get('/menu/main/config', async (req, res) => {
-    const firebase_uid = req.header('firebase_uid');
-
-    const valid = await prisma.users.findUnique({
-        where: {
-            firebase_uid: firebase_uid
-        }
-    })
-
-    if(!valid){
-        return res.status(403).json({
-            error_message: 'The server refused the request'
-        })
-    }           
-
-    await prisma.menu_main_activity.findMany()
-    .then((json) => {
-        return res.status(200).json(json)
-    })
-    .catch((error) => {
-        return res.status(500).json(error)
-    })       
-})
-
-
-
-
 
 routes.post('/community/group', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
