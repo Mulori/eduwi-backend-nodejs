@@ -8,15 +8,14 @@ datasource db {
 }
 
 model community {
-  id              Int               @id @default(autoincrement())
-  title           String?           @db.VarChar(50)
-  description     String?           @db.VarChar(100)
-  author_uid      String?           @db.VarChar(2000)
-  with_password   Int?
-  password        String?           @db.VarChar(2000)
-  users           users?            @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_user")
-  group_community group_community[]
-  user_community  user_community[]
+  id             Int              @id @default(autoincrement())
+  title          String?          @db.VarChar(50)
+  description    String?          @db.VarChar(100)
+  author_uid     String?          @db.VarChar(2000)
+  with_password  Int?
+  password       String?          @db.VarChar(2000)
+  users          users?           @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_user")
+  user_community user_community[]
 }
 
 model user_community {
@@ -28,34 +27,14 @@ model user_community {
 }
 
 model users {
-  id                   Int                    @default(autoincrement())
-  firebase_uid         String                 @id @db.VarChar(2000)
-  email                String?                @db.VarChar(200)
-  name                 String?                @db.VarChar(50)
-  last_name            String?                @db.VarChar(50)
-  community            community[]
-  user_community       user_community[]
-  user_group_community user_group_community[]
-}
-
-model group_community {
-  id                   Int                    @id @default(autoincrement())
-  community_id         Int?
-  title                String?                @db.VarChar(50)
-  description          String?                @db.VarChar(100)
-  max_members          Int?
-  with_password        Int?
-  password             String?                @db.VarChar(2000)
-  community            community?             @relation(fields: [community_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_group_community")
-  user_group_community user_group_community[]
-}
-
-model user_group_community {
-  id              Int              @id @default(autoincrement())
-  group_id        Int?
-  user_uid        String?          @db.VarChar(2000)
-  group_community group_community? @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_group")
-  users           users?           @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_group")
+  id             Int              @default(autoincrement())
+  firebase_uid   String           @id @db.VarChar(2000)
+  email          String?          @db.VarChar(200)
+  name           String?          @db.VarChar(50)
+  last_name      String?          @db.VarChar(50)
+  activity       activity[]
+  community      community[]
+  user_community user_community[]
 }
 
 model menu_main_activity {
@@ -65,4 +44,14 @@ model menu_main_activity {
   color_icon       String? @db.VarChar(20)
   color_title      String? @db.VarChar(20)
   color_background String? @db.VarChar(20)
+}
+
+model activity {
+  id            Int     @id @default(autoincrement())
+  author_uid    String  @db.VarChar(2000)
+  title         String  @db.VarChar(40)
+  with_password Int
+  password      String? @db.VarChar(1000)
+  type_activity String? @db.VarChar(100)
+  users         users   @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_activity")
 }

@@ -367,6 +367,9 @@ routes.get('/menu/main/config', async (req, res) => {
 })
 
 
+
+
+
 routes.post('/community/group', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
     const { community_id, title, description, max_members, password } = req.body;
