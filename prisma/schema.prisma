@@ -7,34 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model community {
-  id             Int              @id @default(autoincrement())
-  title          String?          @db.VarChar(50)
-  description    String?          @db.VarChar(100)
-  author_uid     String?          @db.VarChar(2000)
-  with_password  Int?
-  password       String?          @db.VarChar(2000)
-  users          users?           @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_user")
-  user_community user_community[]
-}
-
-model user_community {
-  id           Int        @id @default(autoincrement())
-  community_id Int?
-  user_uid     String?    @db.VarChar(2000)
-  community    community? @relation(fields: [community_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_community_id")
-  users        users?     @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_id")
-}
-
 model users {
-  id             Int              @default(autoincrement())
-  firebase_uid   String           @id @db.VarChar(2000)
-  email          String?          @db.VarChar(200)
-  name           String?          @db.VarChar(50)
-  last_name      String?          @db.VarChar(50)
-  activity       activity[]
-  community      community[]
-  user_community user_community[]
+  id                               Int                                @default(autoincrement())
+  firebase_uid                     String                             @id @db.VarChar(2000)
+  email                            String?                            @db.VarChar(200)
+  name                             String?                            @db.VarChar(50)
+  last_name                        String?                            @db.VarChar(50)
+  activity                         activity[]
+  activity_question_users          activity_question_users[]
+  activity_question_users_response activity_question_users_response[]
 }
 
 model menu_main_activity {
@@ -47,11 +28,45 @@ model menu_main_activity {
 }
 
 model activity {
-  id            Int     @id @default(autoincrement())
-  author_uid    String  @db.VarChar(2000)
-  title         String  @db.VarChar(40)
-  with_password Int
-  password      String? @db.VarChar(1000)
-  type_activity String? @db.VarChar(100)
-  users         users   @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_activity")
+  id                               Int                                @id @default(autoincrement())
+  author_uid                       String                             @db.VarChar(2000)
+  title                            String                             @db.VarChar(40)
+  with_password                    Int
+  password                         String?                            @db.VarChar(1000)
+  type_activity                    String?                            @db.VarChar(100)
+  excluded                         Int?
+  users                            users                              @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_activity")
+  activity_question_response       activity_question_response[]
+  activity_question_users          activity_question_users[]
+  activity_question_users_response activity_question_users_response[]
+}
+
+model activity_question_response {
+  id              Int       @id @default(autoincrement())
+  activity_id     Int?
+  number_question Int
+  answer_one      String    @db.VarChar(1000)
+  answer_two      String    @db.VarChar(1000)
+  answer_tree     String    @db.VarChar(1000)
+  answer_four     String    @db.VarChar(1000)
+  right_answer    String    @db.VarChar(20)
+  activity        activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
+}
+
+model activity_question_users {
+  id          Int       @id @default(autoincrement())
+  activity_id Int?
+  user_uid    String?   @db.VarChar(2000)
+  activity    activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
+  users       users?    @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
+}
+
+model activity_question_users_response {
+  id              Int       @id @default(autoincrement())
+  activity_id     Int?
+  user_uid        String?   @db.VarChar(2000)
+  number_question Int
+  answer          String    @db.VarChar(20)
+  activity        activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
+  users           users?    @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
 }

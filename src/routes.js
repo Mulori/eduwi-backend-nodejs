@@ -156,6 +156,194 @@ routes.get('/activity', async (req, res) => {
        
 })
 
+routes.post('/activity', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { title, password, type_activity } = req.body;
+    const with_password = 1;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+    if(!title || !type_activity){
+        return res.status(400).json({
+            error_message: 'Bad Request'
+        })
+    }
+
+    await prisma.activity.create({
+        data: {
+            author_uid: firebase_uid,
+            title: title,
+            with_password: password === "" ? 0 : 1,
+            password: md5(password),
+            type_activity: type_activity,
+        }
+    }).then(() => {
+        return res.status(200).json({
+            message: 'Activity created'
+        })
+    }).catch(() => {
+        return res.status(500).json({
+            error_message: 'Error creating activity'
+        })
+    })
+})
+
+routes.post('/activity/question/response', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { activity_id, number_question, answer_one, answer_two, answer_tree, answer_four, right_answer } = req.body;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+    if(!activity_id || !number_question || !answer_one || !answer_two || !answer_tree || !answer_four || !right_answer){
+        return res.status(400).json({
+            error_message: 'Bad Request'
+        })
+    }
+
+    await prisma.activity_question_response.create({
+        data: {
+            activity_id: activity_id,
+            number_question: number_question,
+            answer_one: answer_one,
+            answer_two: answer_two,
+            answer_tree: answer_tree,
+            answer_four: answer_four,
+            right_answer: right_answer
+        }
+    }).then(() => {
+        return res.status(200).json({
+            message: 'Activity response created'
+        })
+    }).catch(() => {
+        return res.status(500).json({
+            error_message: 'Error activity'
+        })
+    })
+})
+
+routes.post('/activity/question/users', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { activity_id } = req.body;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+    if(!activity_id){
+        return res.status(400).json({
+            error_message: 'Bad Request'
+        })
+    }
+
+    const exist = await prisma.activity_question_users.count({
+        where: {
+            activity_id: activity_id,
+            user_uid: firebase_uid
+        }
+    })
+
+    if(exist > 0){
+        return res.status(400).json({error_message: 'User has already joined the activity'});
+    }
+
+    await prisma.activity_question_users.create({
+        data: {
+            activity_id: activity_id,
+            user_uid: firebase_uid,
+        }
+    }).then(() => {
+        return res.status(200).json({
+            message: 'User entered in activity'
+        })
+    }).catch(() => {
+        return res.status(500).json({
+            error_message: 'Error activity user'
+        })
+    })
+})
+
+routes.post('/activity/question/users/response', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { activity_id, number_question, answer } = req.body;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+    if(!activity_id || !number_question || !answer){
+        return res.status(400).json({
+            error_message: 'Bad Request'
+        })
+    }
+
+    const exist = await prisma.activity_question_users_response.count({
+        where: {
+            activity_id: activity_id,
+            user_uid: firebase_uid,
+            number_question: number_question
+        }
+    })
+
+    if(exist > 0){
+        return res.status(400).json({error_message: 'The user has already answered this question'});
+    }
+
+    await prisma.activity_question_users_response.create({
+        data: {
+            activity_id: activity_id,
+            user_uid: firebase_uid,
+            number_question: number_question,
+            answer: answer
+        }
+    }).then(() => {
+        return res.status(200).json({
+            message: 'User replied answer activity'
+        })
+    }).catch(() => {
+        return res.status(500).json({
+            error_message: 'Error activity user'
+        })
+    })
+})
+
+
+
 
 
 
