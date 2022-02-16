@@ -152,8 +152,7 @@ routes.get('/activity', async (req, res) => {
     })
     .catch((error) => {
         return res.status(500).json(error)
-    })
-       
+    })       
 })
 
 routes.post('/activity', async (req, res) => {
@@ -342,6 +341,70 @@ routes.post('/activity/question/users/response', async (req, res) => {
     })
 })
 
+routes.get('/activity/:id', async (req, res) => {
+    const { id } = req.params
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }   
+
+    try{
+        const id_ascii = Buffer.from(id, 'base64').toString('ascii');
+
+        await prisma.$queryRawUnsafe("select a.id, a.author_uid, a.title, a.with_password, a.password, u.name || ' ' || u.last_name as name, a.type_activity from activity a inner join users u on(a.author_uid = u.firebase_uid) where a.id = '" + id_ascii + "' and a.excluded is null limit 1")
+        .then((json) => {
+
+            if(json.toString() === ''){
+                return res.status(404).json({ error: 'Activity not found' })
+            }
+
+            return res.status(200).json(json)
+        })
+        .catch((error) => {
+            return res.status(404).json({ error: 'Activity not found' })
+        })  
+    }catch{
+        return res.status(404).json({ error: 'Activity not found' })
+    }  
+})
+
+routes.get('/activity/:id/response', async (req, res) => {
+    const { id } = req.params
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+    await prisma.activity_question_response.findMany({
+        where: {
+            activity_id: parseInt(id)
+        }
+    })
+    .then((json) => {
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })
+})
 
 
 
