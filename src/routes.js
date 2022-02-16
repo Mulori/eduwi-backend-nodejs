@@ -396,7 +396,10 @@ routes.get('/activity/:id/response', async (req, res) => {
     await prisma.activity_question_response.findMany({
         where: {
             activity_id: parseInt(id)
-        }
+        },
+        orderBy: [
+            { number_question: 'asc' },
+        ]
     })
     .then((json) => {
         return res.status(200).json(json)
