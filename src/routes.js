@@ -120,7 +120,11 @@ routes.get('/menu/main/config', async (req, res) => {
         })
     }           
 
-    await prisma.menu_main_activity.findMany()
+    await prisma.menu_main_activity.findMany({
+        orderBy: [
+            { id: 'asc' },
+        ]
+    })
     .then((json) => {
         return res.status(200).json(json)
     })
