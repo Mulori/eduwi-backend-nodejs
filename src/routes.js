@@ -148,7 +148,7 @@ routes.get('/activity', async (req, res) => {
         })
     }    
 
-    const ssql1 = "select title, with_password, type_activity, name || ' ' || last_name as name from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null";
+    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null";
 
     await prisma.$queryRawUnsafe(ssql1)
     .then((json) => {
@@ -157,7 +157,7 @@ routes.get('/activity', async (req, res) => {
     .catch((error) => {
         return res.status(500).json(error)
     })       
-})
+}) 
 
 routes.post('/activity', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
