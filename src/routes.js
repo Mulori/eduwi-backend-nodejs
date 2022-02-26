@@ -203,7 +203,7 @@ routes.post('/activity', async (req, res) => {
 
 routes.post('/activity/question/response', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
-    const { activity_id, number_question, answer_one, answer_two, answer_tree, answer_four, right_answer } = req.body;
+    const { activity_id, number_question, question, answer_one, answer_two, answer_tree, answer_four, right_answer } = req.body;
 
     const valid = await prisma.users.findUnique({
         where: {
@@ -217,7 +217,8 @@ routes.post('/activity/question/response', async (req, res) => {
         })
     } 
 
-    if(!activity_id || !number_question || !answer_one || !answer_two || !answer_tree || !answer_four || !right_answer){
+
+    if(!activity_id || !number_question || !answer_one || !answer_two || !answer_tree || !answer_four || !right_answer || !question){
         return res.status(400).json({
             error_message: 'Bad Request'
         })
@@ -231,15 +232,16 @@ routes.post('/activity/question/response', async (req, res) => {
             answer_two: answer_two,
             answer_tree: answer_tree,
             answer_four: answer_four,
-            right_answer: right_answer
+            right_answer: right_answer,
+            question: question
         }
     }).then(() => {
         return res.status(200).json({
             message: 'Activity response created'
         })
-    }).catch(() => {
+    }).catch((values) => {
         return res.status(500).json({
-            error_message: 'Error activity'
+            error_message: 'Error activity ' + values
         })
     })
 })

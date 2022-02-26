@@ -50,6 +50,7 @@ model activity_question_response {
   answer_tree     String    @db.VarChar(1000)
   answer_four     String    @db.VarChar(1000)
   right_answer    String    @db.VarChar(20)
+  question        String?   @db.VarChar(2000)
   activity        activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
 }
 
