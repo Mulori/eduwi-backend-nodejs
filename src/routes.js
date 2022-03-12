@@ -178,7 +178,7 @@ routes.post('/activity', async (req, res) => {
 
     if(!title || !type_activity){
         return res.status(400).json({
-            error_message: 'Bad Request'
+            error_message: 'Bad Request post activity'
         })
     }
 
@@ -218,7 +218,7 @@ routes.post('/activity/question/response', async (req, res) => {
 
     if(!activity_id || !number_question || !answer_one || !answer_two || !answer_tree || !answer_four || !right_answer || !question){
         return res.status(400).json({
-            error_message: 'Bad Request'
+            error_message: 'Bad Request post anwer activity'
         })
     }
 
