@@ -148,7 +148,7 @@ routes.get('/activity', async (req, res) => {
         })
     }    
 
-    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null";
+    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password, (select count(id) from activity_question_users where activity_id = a.id) as number_members from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null order by number_members desc limit 30";
 
     await prisma.$queryRawUnsafe(ssql1)
     .then((json) => {
@@ -295,7 +295,7 @@ routes.post('/activity/question/users', async (req, res) => {
 
 routes.post('/activity/question/users/response', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
-    const { activity_id, number_question, answer } = req.body;
+    const jsonArray = req.body;   
 
     const valid = await prisma.users.findUnique({
         where: {
@@ -309,39 +309,47 @@ routes.post('/activity/question/users/response', async (req, res) => {
         })
     } 
 
-    if(!activity_id || !number_question || !answer){
+    if(!jsonArray){
         return res.status(400).json({
             error_message: 'Bad Request'
         })
     }
-
-    const exist = await prisma.activity_question_users_response.count({
-        where: {
-            activity_id: activity_id,
-            user_uid: firebase_uid,
-            number_question: number_question
-        }
-    })
-
-    if(exist > 0){
-        return res.status(400).json({error_message: 'The user has already answered this question'});
-    }
-
-    await prisma.activity_question_users_response.create({
-        data: {
-            activity_id: activity_id,
-            user_uid: firebase_uid,
-            number_question: number_question,
-            answer: answer
-        }
-    }).then(() => {
-        return res.status(200).json({
-            message: 'User replied answer activity'
+    
+    jsonArray.forEach(async item => {
+        const exist = await prisma.activity_question_users_response.count({
+            where: {
+                activity_id: item.activity_id,
+                user_uid: firebase_uid,
+                number_question: item.number_question
+            }
         })
-    }).catch(() => {
-        return res.status(500).json({
-            error_message: 'Error activity user'
-        })
+    
+        if(exist > 0){
+            return res.status(400).json({error_message: 'The user has already answered this question'});
+        }
+
+        await prisma.activity_question_users_response.create({
+            data: {
+                activity_id: item.activity_id,
+                user_uid: firebase_uid,
+                number_question: item.number_question,
+                answer: item.answer
+            }
+        }).then().catch(async () => {
+            var ssql = "delete from activity_question_users_response where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
+            await prisma.$executeRawUnsafe(ssql).then().catch();
+
+            ssql = "delete from activity_question_users where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
+            await prisma.$executeRawUnsafe(ssql).then().catch();
+
+            return res.status(500).json({
+                error_message: 'Error creating user response'
+            })
+        })       
+    });
+
+    return res.status(200).json({
+        message: 'OK'
     })
 })
 
@@ -429,13 +437,14 @@ routes.put('/activity/:id/value', async (req, res) => {
         })
     } 
 
-    let ssql = 'select aqur.activity_id, aqur.number_question, CASE WHEN aqur.answer = (select right_answer from activity_question_response'
+    let ssql = 'select CASE WHEN aqur.answer = (select right_answer from activity_question_response'
     .concat(' where activity_id = aqur.activity_id and number_question = aqur.number_question) THEN 1 ELSE 0 END as correcty from activity_question_users_response aqur')
-    .concat(" where aqur.activity_id = '" + id + "' group by aqur.activity_id, aqur.number_question, correcty order by aqur.number_question asc")
+    .concat(" where aqur.activity_id = '" + id + "' and aqur.user_uid = '" + firebase_uid + "' group by aqur.activity_id, aqur.number_question, correcty order by aqur.number_question asc")
 
     var contador = 0;
     await prisma.$queryRawUnsafe(ssql)
     .then((data) => {
+        console.log(data)
         for (var item in data){
             if(data[item].correcty == 1){
                 contador++;
