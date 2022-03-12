@@ -262,7 +262,7 @@ routes.post('/activity/question/users', async (req, res) => {
 
     if(!activity_id){
         return res.status(400).json({
-            error_message: 'Bad Request'
+            error_message: 'Bad Request post user in question'
         })
     }
 
@@ -311,7 +311,7 @@ routes.post('/activity/question/users/response', async (req, res) => {
 
     if(!jsonArray){
         return res.status(400).json({
-            error_message: 'Bad Request'
+            error_message: 'Bad Request post anwer'
         })
     }
     
