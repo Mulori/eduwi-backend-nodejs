@@ -421,52 +421,6 @@ routes.get('/activity/:id/response', async (req, res) => {
     })
 })
 
-routes.put('/activity/:id/value', async (req, res) => {
-    const { id } = req.params
-    const firebase_uid = req.header('firebase_uid');
-
-    const valid = await prisma.users.findUnique({
-        where: {
-            firebase_uid: firebase_uid
-        }
-    })
-
-    if(!valid){
-        return res.status(403).json({
-            error_message: 'The server refused the request'
-        })
-    } 
-
-    let ssql = 'select CASE WHEN aqur.answer = (select right_answer from activity_question_response'
-    .concat(' where activity_id = aqur.activity_id and number_question = aqur.number_question) THEN 1 ELSE 0 END as correcty from activity_question_users_response aqur')
-    .concat(" where aqur.activity_id = '" + id + "' and aqur.user_uid = '" + firebase_uid + "' group by aqur.activity_id, aqur.number_question, correcty order by aqur.number_question asc")
-
-    var contador = 0;
-    await prisma.$queryRawUnsafe(ssql)
-    .then((data) => {
-        console.log(data)
-        for (var item in data){
-            if(data[item].correcty == 1){
-                contador++;
-            }
-        }
-    })
-    .catch((error) => {
-        return res.status(500).json(error)
-    })
-
-    ssql = "update activity_question_users set value =(cast(" + contador + " as decimal) / cast((select count(activity_id) as qtd from activity_question_response where activity_id = " + id + ") as decimal) * 100)"
-    .concat(" where activity_id = '" + id + "' and user_uid = '" + firebase_uid + "'")   
-    console.log(ssql)
-    await prisma.$executeRawUnsafe(ssql)
-    .then(() => {
-        return res.status(200).json('OK');
-    })
-    .catch((error) => {
-        return res.status(500).json(error)
-    })
-})
-
 routes.get('/activity/:id/users/concluded', async (req, res) => {
     const { id } = req.params
     const firebase_uid = req.header('firebase_uid');
@@ -495,6 +449,45 @@ routes.get('/activity/:id/users/concluded', async (req, res) => {
 })
 
 
+setInterval(async function(){
+
+    var ssql = "select a.id, au.user_uid from activity_question_users au inner join activity a on(au.activity_id = a.id) where a.type_activity = 'questions' and au.value is null";
+
+    const users = await prisma.$queryRawUnsafe(ssql)
+
+    users.forEach(async element => {
+        ssql = 'select CASE WHEN aqur.answer = (select right_answer from activity_question_response'
+        .concat(' where activity_id = aqur.activity_id and number_question = aqur.number_question) THEN 1 ELSE 0 END as correcty from activity_question_users_response aqur')
+        .concat(" where aqur.activity_id = '" + element.id + "' and aqur.user_uid = '" + element.user_uid + "' group by aqur.activity_id, aqur.number_question, correcty order by aqur.number_question asc")
+
+        var contador = 0;
+        await prisma.$queryRawUnsafe(ssql)
+        .then((data) => {
+            for (var item in data){
+                if(data[item].correcty == 1){
+                    contador++;
+                }
+            }
+        })
+        .catch((error) => {
+            console.log(error)
+        })
+
+        ssql = "select count(activity_id) as qtd from activity_question_response where activity_id = '" + element.id + "'"
+        const quantidade_questoes = await prisma.$queryRawUnsafe(ssql)
+
+        var divisao =  parseInt(contador) / parseInt(quantidade_questoes[0].qtd)
+        var multiplicacao = divisao * 100;
+
+        ssql = "update activity_question_users set value = '" + multiplicacao + "'"
+        .concat(" where activity_id = '" + element.id + "' and user_uid = '" + element.user_uid + "'")   
+
+        console.log(ssql)
+        await prisma.$executeRawUnsafe(ssql).then().catch((error) => {console.log(error)})
+    });    
+
+
+}, 15000);
 
 
 module.exports = routes;
