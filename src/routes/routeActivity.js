@@ -31,6 +31,32 @@ routes.get('/activity', async (req, res) => {
     })       
 }) 
 
+routes.get('/activity/users', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }    
+
+    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password, (select count(id) from activity_question_users where activity_id = a.id) as number_members from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null and a.author_uid = '" + firebase_uid + "' order by number_members desc limit 30";
+
+    await prisma.$queryRawUnsafe(ssql1)
+    .then((json) => {
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })       
+}) 
+
 routes.post('/activity', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
     const { title, password, type_activity } = req.body;

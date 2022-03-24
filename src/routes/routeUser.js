@@ -55,47 +55,8 @@ if(!valid){
     })
 }    
 
-prisma.users.findMany()
-.then((json) => {
-    return res.status(200).json(json)
-}).catch((error) => {
-    return res.status(500).json({
-        error_message: error
-    })
-})
+    return res.status(200).json(valid);
 })
 
-routes.get('/users/:uid', async (req, res) => {
-    const { uid } = req.params
-    const firebase_uid = req.header('firebase_uid');
-
-    const valid = await prisma.users.findUnique({
-        where: {
-            firebase_uid: firebase_uid
-        }
-    })
-
-    if(!valid){
-        return res.status(403).json({
-            error_message: 'The server refused the request'
-        })
-    }   
-
-    await prisma.users.findUnique({
-        where:{
-            firebase_uid: uid
-        },
-        include: { 
-            community: true, 
-            user_community: true
-        }})
-    .then((json) => {
-        return res.status(200).json(json)
-    }).catch((error) => {
-        return res.status(500).json({
-            error_message: error
-        })
-    })
-})
 
 module.exports = routes;
