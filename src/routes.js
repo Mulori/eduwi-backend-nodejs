@@ -480,8 +480,14 @@ setInterval(async function(){
         .concat(" where activity_id = '" + element.id + "' and user_uid = '" + element.user_uid + "'")   
 
         console.log(ssql)
-        await prisma.$executeRawUnsafe(ssql).then().catch((error) => {console.log(error)})
-    });    
+        await prisma.$executeRawUnsafe(ssql).then().catch((error) => {console.log(error)})       
+        
+    }); 
+    
+    
+    ssql = "update users u set score = (select COALESCE(sum(value), 0) as valor from activity_question_users where user_uid = u.firebase_uid)"
+    console.log(ssql)
+    await prisma.$executeRawUnsafe(ssql).then().catch((error) => {console.log(error)})
 
 
 }, 15000);
