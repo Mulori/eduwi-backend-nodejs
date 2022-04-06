@@ -17,6 +17,7 @@ model users {
   activity                         activity[]
   activity_question_users          activity_question_users[]
   activity_question_users_response activity_question_users_response[]
+  reward_users                     reward_users[]
 }
 
 model menu_main_activity {
@@ -72,4 +73,23 @@ model activity_question_users_response {
   answer          String    @db.VarChar(20)
   activity        activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
   users           users?    @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
+}
+
+model reward {
+  id           Int            @id @default(autoincrement())
+  type         Int
+  name         String         @db.VarChar(50)
+  description  String         @db.VarChar(1000)
+  value        Decimal        @db.Decimal(14, 0)
+  picture      String?        @db.VarChar(5000)
+  reward_users reward_users[]
+}
+
+model reward_users {
+  id        Int     @id @default(autoincrement())
+  user_uid  String? @db.VarChar(2000)
+  reward_id Int?
+  amount    Int
+  reward    reward? @relation(fields: [reward_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_reward_user")
+  users     users?  @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_reward")
 }
