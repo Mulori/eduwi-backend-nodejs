@@ -448,7 +448,11 @@ const WelcomeController = require('./controllers/WelcomeController');
 
 setInterval(async function(){
 
-    var ssql = "select a.id, au.user_uid from activity_question_users au inner join activity a on(au.activity_id = a.id) where a.type_activity = 'questions' and au.value is null";
+    var ssql = "update users set score = 0 where score is null"
+    console.log(ssql)
+    await prisma.$executeRawUnsafe(ssql).then().catch((error) => {console.log(error)})
+
+    ssql = "select a.id, au.user_uid from activity_question_users au inner join activity a on(au.activity_id = a.id) where a.type_activity = 'questions' and au.value is null";
 
     const users = await prisma.$queryRawUnsafe(ssql)
 
@@ -485,9 +489,15 @@ setInterval(async function(){
     }); 
     
     
-    ssql = "update users u set score = (select COALESCE(sum(value), 0) as valor from activity_question_users where user_uid = u.firebase_uid)"
+    ssql = "update users u set score = score + (select COALESCE(sum(value), 0) as valor from activity_question_users where user_uid = u.firebase_uid and processed is null)"
     console.log(ssql)
-    await prisma.$executeRawUnsafe(ssql).then().catch((error) => {console.log(error)})
+    await prisma.$executeRawUnsafe(ssql).then(async () => {
+        ssql = "update activity_question_users set processed = 1 where value is not null"
+        console.log(ssql)
+        await prisma.$executeRawUnsafe(ssql).then().catch((error) => {console.log(error)})
+    }).catch((error) => {console.log(error)})
+
+    
 
 
 }, 15000);
