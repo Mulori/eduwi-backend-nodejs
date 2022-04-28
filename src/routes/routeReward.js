@@ -48,7 +48,7 @@ routes.get('/reward/users', async (req, res) => {
         })
     }           
 
-    var ssql = "select r.*, ru.amount from reward_users ru inner join reward r on(ru.reward_id = r.id) where user_uid = '" + firebase_uid + "'"
+    var ssql = "select r.*, ru.amount from reward_users ru inner join reward r on(ru.reward_id = r.id) where user_uid = '" + firebase_uid + "' and ru.amount > 0"
 
     await prisma.$queryRawUnsafe(ssql)
     .then((json) => {
@@ -118,6 +118,62 @@ routes.post('/reward', async (req, res) => {
     })
     .catch((error) => {
         return res.status(500).json(error)
+    })       
+})
+
+routes.post('/reward/:id/use', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { id } = req.params
+
+    const user = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!user){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }   
+
+    const reward = await prisma.reward_users.findUnique({
+        where: {
+            id: parseInt(id)
+        }
+    })
+
+    if(!reward){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+    if(reward.amount < 1){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })   
+    }
+
+    var ssql = "select ru.id as id_mov, r.id as id_reward, r.type, ru.amount, r.name, r.description, r.value, r.picture from reward_users ru inner join reward r on(ru.reward_id = r.id) where ru.id = '" + id + "'"
+ 
+    console.log(ssql)
+
+    await prisma.$queryRawUnsafe(ssql)
+    .then(async (jsonP) => {
+
+        ssql = "update reward_users set amount = amount - 1 where id = '" + id + "'"
+
+        await prisma.$executeRawUnsafe(ssql)
+        .then((json) => {
+            return res.status(200).json(jsonP)
+        })
+        .catch((error) => {
+            return res.status(500).json(error)
+        })
+    })
+    .catch((errorP) => {
+        return res.status(500).json(errorP)
     })       
 })
 

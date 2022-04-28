@@ -467,4 +467,31 @@ routes.put('/activity/:id/password', async (req, res) => {
     })
 })
 
+routes.get('/activity/:id/done', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { id } = req.params
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }    
+
+    const ssql = "select * from activity_question_users where activity_id = '" + id + "' and user_uid = '" + firebase_uid  + "'";
+
+    await prisma.$queryRawUnsafe(ssql)
+    .then((json) => {        
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })       
+}) 
+
 module.exports = routes;
