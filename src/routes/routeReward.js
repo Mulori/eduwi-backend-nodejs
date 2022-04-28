@@ -48,7 +48,7 @@ routes.get('/reward/users', async (req, res) => {
         })
     }           
 
-    var ssql = "select r.*, ru.amount from reward_users ru inner join reward r on(ru.reward_id = r.id) where user_uid = '" + firebase_uid + "' and ru.amount > 0"
+    var ssql = "select r.*, ru.id as id_amount, ru.amount from reward_users ru inner join reward r on(ru.reward_id = r.id) where user_uid = '" + firebase_uid + "' and ru.amount > 0"
 
     await prisma.$queryRawUnsafe(ssql)
     .then((json) => {
