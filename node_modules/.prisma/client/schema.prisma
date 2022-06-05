@@ -61,6 +61,7 @@ model activity_question_users {
   activity_id Int?
   user_uid    String?   @db.VarChar(2000)
   value       Decimal?  @db.Decimal(14, 2)
+  processed   Int?
   activity    activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
   users       users?    @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
 }
@@ -92,4 +93,14 @@ model reward_users {
   amount    Int
   reward    reward? @relation(fields: [reward_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_reward_user")
   users     users?  @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_reward")
+}
+
+model activity_sentences {
+  id                Int    @id @default(autoincrement())
+  activity_id       Int
+  number_sentence   Int
+  complete_sentence String @db.VarChar(250)
+  marked_sentence   String @db.VarChar(250)
+  hidden_words      String @db.VarChar(250)
+  words_help        String @db.VarChar(250)
 }
