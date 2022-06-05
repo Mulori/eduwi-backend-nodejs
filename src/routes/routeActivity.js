@@ -142,6 +142,49 @@ routes.post('/activity/question/response', async (req, res) => {
     })
 })
 
+routes.post('/activity/sentences', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { activity_id, number_sentence, complete_sentence, marked_sentence, hidden_words, words_help } = req.body;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+
+    if(!activity_id || !number_sentence || !complete_sentence || !marked_sentence || !hidden_words || !words_help ){
+        return res.status(400).json({
+            error_message: 'Bad Request post anwer activity'
+        })
+    }
+
+    await prisma.activity_sentences.create({
+        data: {
+            activity_id: activity_id,
+            number_sentence: number_sentence,
+            complete_sentence: complete_sentence,
+            marked_sentence: marked_sentence,
+            hidden_words: hidden_words,
+            words_help: words_help
+        }
+    }).then(() => {
+        return res.status(200).json({
+            message: 'Activity sentences created'
+        })
+    }).catch((values) => {
+        return res.status(500).json({
+            error_message: 'Error activity ' + values
+        })
+    })
+})
+
 routes.post('/activity/question/users', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
     const { activity_id } = req.body;
