@@ -316,6 +316,8 @@ routes.post('/activity/sentences/users/response', async (req, res) => {
             error_message: 'Bad Request post anwer'
         })
     }
+
+    console.log(jsonArray)
     
     jsonArray.forEach(async item => {
         const exist = await prisma.activity_sentences_users_response.count({
