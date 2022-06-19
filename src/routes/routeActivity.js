@@ -234,54 +234,6 @@ routes.post('/activity/question/users', async (req, res) => {
     })
 })
 
-routes.post('/activity/sentences/users', async (req, res) => {
-    const firebase_uid = req.header('firebase_uid');
-    const { activity_id } = req.body;
-
-    const valid = await prisma.users.findUnique({
-        where: {
-            firebase_uid: firebase_uid
-        }
-    })
-
-    if(!valid){
-        return res.status(403).json({
-            error_message: 'The server refused the request'
-        })
-    } 
-
-    if(!activity_id){
-        return res.status(400).json({
-            error_message: 'Bad Request post user in question'
-        })
-    }
-
-    const exist = await prisma.activity_sentences_users.count({
-        where: {
-            activity_id: activity_id,
-            user_uid: firebase_uid
-        }
-    })
-
-    if(exist > 0){
-        return res.status(400).json({error_message: 'User has already joined the activity'});
-    }
-
-    await prisma.activity_sentences_users.create({
-        data: {
-            activity_id: activity_id,
-            user_uid: firebase_uid,
-        }
-    }).then(() => {
-        return res.status(200).json({
-            message: 'User entered in activity'
-        })
-    }).catch(() => {
-        return res.status(500).json({
-            error_message: 'Error activity user'
-        })
-    })
-})
 
 routes.post('/activity/question/users/response', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
@@ -382,14 +334,16 @@ routes.post('/activity/sentences/users/response', async (req, res) => {
             data: {
                 activity_id: item.activity_id,
                 user_uid: firebase_uid,
-                number_question: item.number_sentence,
+                number_sentence: item.number_sentence,
                 sentences_informed: item.sentences_informed
             }
-        }).then().catch(async () => {
+        }).then().catch(async (value) => {
+            console.log(value)
+
             var ssql = "delete from activity_sentences_users_response where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
             await prisma.$executeRawUnsafe(ssql).then().catch();
 
-            ssql = "delete from activity_sentences_users where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
+            ssql = "delete from activity_question_users where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
             await prisma.$executeRawUnsafe(ssql).then().catch();
 
             return res.status(500).json({
