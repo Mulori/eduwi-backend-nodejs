@@ -8,16 +8,18 @@ datasource db {
 }
 
 model users {
-  id                               Int                                @default(autoincrement())
-  firebase_uid                     String                             @id @db.VarChar(2000)
-  email                            String?                            @db.VarChar(200)
-  name                             String?                            @db.VarChar(50)
-  last_name                        String?                            @db.VarChar(50)
-  score                            Decimal?                           @default(0) @db.Decimal(20, 0)
-  activity                         activity[]
-  activity_question_users          activity_question_users[]
-  activity_question_users_response activity_question_users_response[]
-  reward_users                     reward_users[]
+  id                                Int                                 @default(autoincrement())
+  firebase_uid                      String                              @id @db.VarChar(2000)
+  email                             String?                             @db.VarChar(200)
+  name                              String?                             @db.VarChar(50)
+  last_name                         String?                             @db.VarChar(50)
+  score                             Decimal?                            @default(0) @db.Decimal(20, 0)
+  activity                          activity[]
+  activity_question_users           activity_question_users[]
+  activity_question_users_response  activity_question_users_response[]
+  activity_sentences_users          activity_sentences_users[]
+  activity_sentences_users_response activity_sentences_users_response[]
+  reward_users                      reward_users[]
 }
 
 model menu_main_activity {
@@ -30,17 +32,19 @@ model menu_main_activity {
 }
 
 model activity {
-  id                               Int                                @id @default(autoincrement())
-  author_uid                       String                             @db.VarChar(2000)
-  title                            String                             @db.VarChar(40)
-  with_password                    Int
-  password                         String?                            @db.VarChar(1000)
-  type_activity                    String?                            @db.VarChar(100)
-  excluded                         Int?
-  users                            users                              @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_activity")
-  activity_question_response       activity_question_response[]
-  activity_question_users          activity_question_users[]
-  activity_question_users_response activity_question_users_response[]
+  id                                Int                                 @id @default(autoincrement())
+  author_uid                        String                              @db.VarChar(2000)
+  title                             String                              @db.VarChar(40)
+  with_password                     Int
+  password                          String?                             @db.VarChar(1000)
+  type_activity                     String?                             @db.VarChar(100)
+  excluded                          Int?
+  users                             users                               @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_activity")
+  activity_question_response        activity_question_response[]
+  activity_question_users           activity_question_users[]
+  activity_question_users_response  activity_question_users_response[]
+  activity_sentences_users          activity_sentences_users[]
+  activity_sentences_users_response activity_sentences_users_response[]
 }
 
 model activity_question_response {
@@ -103,4 +107,24 @@ model activity_sentences {
   marked_sentence   String @db.VarChar(250)
   hidden_words      String @db.VarChar(250)
   words_help        String @db.VarChar(250)
+}
+
+model activity_sentences_users {
+  id          Int       @id @default(autoincrement())
+  activity_id Int?
+  user_uid    String?   @db.VarChar(2000)
+  value       Decimal?  @db.Decimal(14, 2)
+  processed   Int?
+  activity    activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
+  users       users?    @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
+}
+
+model activity_sentences_users_response {
+  id                 Int       @id @default(autoincrement())
+  activity_id        Int?
+  user_uid           String?   @db.VarChar(2000)
+  number_sentence    Int
+  sentences_informed String    @db.VarChar(500)
+  activity           activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
+  users              users?    @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
 }
