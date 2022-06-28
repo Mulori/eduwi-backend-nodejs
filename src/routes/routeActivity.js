@@ -3,6 +3,7 @@ var md5 = require('md5');
 const routes = require('express').Router();
 
 const { PrismaClient } = require('@prisma/client');
+const { parse } = require('path');
 const prisma = new PrismaClient();
 
 routes.get('/activity', async (req, res) => {
@@ -502,10 +503,24 @@ routes.get('/activity/:id/users/response/finished', async (req, res) => {
         })
     } 
 
-    var ssql = "select au.id as id_response_user, ar.id as id_response_created, au.activity_id, au.user_uid, au.number_question,"
-    .concat(" au.answer as response_user, ar.right_answer as response_correcty, ar.question, ar.answer_one,  ar.answer_two,  ar.answer_tree,  ar.answer_four")
-    .concat(" from activity_question_users_response au inner join activity_question_response ar on(au.activity_id = ar.activity_id and au.number_question = ar.number_question)")
-    .concat(" where au.activity_id = '" + id + "' and au.user_uid = '" + firebase_uid + "' order by au.number_question asc")
+    const activity = await prisma.activity.findUnique({
+        where: {
+            id: parseInt(id)
+        }
+    })
+
+    var ssql = "";
+    if(activity.type_activity == 'questions'){
+        ssql = "select au.id as id_response_user, ar.id as id_response_created, au.activity_id, au.user_uid, au.number_question,"
+        .concat(" au.answer as response_user, ar.right_answer as response_correcty, ar.question, ar.answer_one,  ar.answer_two,  ar.answer_tree,  ar.answer_four")
+        .concat(" from activity_question_users_response au inner join activity_question_response ar on(au.activity_id = ar.activity_id and au.number_question = ar.number_question)")
+        .concat(" where au.activity_id = '" + id + "' and au.user_uid = '" + firebase_uid + "' order by au.number_question asc")
+    }else if(activity.type_activity == 'sentences'){
+        ssql = "select au.id as id_response_user, ar.id as id_response_created, au.activity_id, au.user_uid, au.number_sentence,"
+        .concat(" au.sentences_informed as response_user, ar.hidden_words as response_correcty, ar.complete_sentence, ar.marked_sentence,  ar.words_help")
+        .concat(" from activity_sentences_users_response au inner join activity_sentences ar on(au.activity_id = ar.activity_id and au.number_sentence = ar.number_sentence)")
+        .concat(" where au.activity_id = '" + id + "' and au.user_uid = '" + firebase_uid + "' order by au.number_sentence asc")
+    }
 
     await prisma.$queryRawUnsafe(ssql)
     .then((json) => {
