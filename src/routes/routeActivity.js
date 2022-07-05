@@ -754,10 +754,9 @@ routes.put('/activity/:id/display/user', async (req, res) => {
     })
 })
 
-routes.get('/activity/:id/comment/:number', async (req, res) => {
+routes.get('/activity/:id/comment/:number/user/:useruid', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
-    const { id, number } = req.params
-    const { user_uid } = req.body
+    const { id, number, useruid } = req.params
 
     const valid = await prisma.users.findUnique({
         where: {
@@ -777,7 +776,7 @@ routes.get('/activity/:id/comment/:number', async (req, res) => {
         })
     } 
 
-    if(!user_uid){
+    if(!useruid){
         return res.status(403).json({
             error_message: 'The server refused the request - reason: user_uid'
         })
@@ -797,9 +796,9 @@ routes.get('/activity/:id/comment/:number', async (req, res) => {
 
     var ssql = "";
     if(activity.type_activity == 'questions'){
-        ssql = "select comments from activity_question_users_response where activity_id = '" + id + "' and user_uid = '" + user_uid + "' and number_question = '" + number + "'"
+        ssql = "select comments from activity_question_users_response where activity_id = '" + id + "' and user_uid = '" + useruid + "' and number_question = '" + number + "'"
     }else if(activity.type_activity == 'sentences'){
-        ssql = "select comments from activity_sentences_users_response where activity_id = '" + id + "' and user_uid = '" + user_uid + "' and number_sentence = '" + number +"'"
+        ssql = "select comments from activity_sentences_users_response where activity_id = '" + id + "' and user_uid = '" + useruid + "' and number_sentence = '" + number +"'"
     }
 
     await prisma.$queryRawUnsafe(ssql)
