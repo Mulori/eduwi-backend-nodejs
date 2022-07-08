@@ -3,6 +3,7 @@ var md5 = require('md5');
 const routes = require('express').Router();
 
 const { PrismaClient } = require('@prisma/client');
+const { parse } = require('path');
 const prisma = new PrismaClient();
 
 routes.get('/activity', async (req, res) => {
@@ -187,7 +188,8 @@ routes.post('/activity/sentences', async (req, res) => {
 
 routes.post('/activity/question/users', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
-    const { activity_id } = req.body;
+    const { activity_id, created } = req.body;
+    var now = new Date();
 
     const valid = await prisma.users.findUnique({
         where: {
@@ -222,14 +224,16 @@ routes.post('/activity/question/users', async (req, res) => {
         data: {
             activity_id: activity_id,
             user_uid: firebase_uid,
+            created: now,
+            display_to_user: 0
         }
     }).then(() => {
         return res.status(200).json({
             message: 'User entered in activity'
         })
-    }).catch(() => {
+    }).catch((value) => {
         return res.status(500).json({
-            error_message: 'Error activity user'
+            error_message: 'Error activity user '
         })
     })
 })
@@ -261,7 +265,7 @@ routes.post('/activity/question/users/response', async (req, res) => {
             where: {
                 activity_id: item.activity_id,
                 user_uid: firebase_uid,
-                number_question: item.number_question
+                number_question: item.number_question,
             }
         })
     
@@ -274,10 +278,76 @@ routes.post('/activity/question/users/response', async (req, res) => {
                 activity_id: item.activity_id,
                 user_uid: firebase_uid,
                 number_question: item.number_question,
-                answer: item.answer
+                answer: item.answer,
+                comments: ''
             }
         }).then().catch(async () => {
             var ssql = "delete from activity_question_users_response where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
+            await prisma.$executeRawUnsafe(ssql).then().catch();
+
+            ssql = "delete from activity_question_users where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
+            await prisma.$executeRawUnsafe(ssql).then().catch();
+
+            return res.status(500).json({
+                error_message: 'Error creating user response'
+            })
+        })       
+    });
+
+    return res.status(200).json({
+        message: 'OK'
+    })
+})
+
+routes.post('/activity/sentences/users/response', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const jsonArray = req.body;   
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+    if(!jsonArray){
+        return res.status(400).json({
+            error_message: 'Bad Request post anwer'
+        })
+    }
+
+    console.log(jsonArray)
+    
+    jsonArray.forEach(async item => {
+        const exist = await prisma.activity_sentences_users_response.count({
+            where: {
+                activity_id: item.activity_id,
+                user_uid: firebase_uid,
+                number_sentence: item.number_sentence
+            }
+        })
+    
+        if(exist > 0){
+            return res.status(400).json({error_message: 'The user has already answered this phrase'});
+        }
+
+        await prisma.activity_sentences_users_response.create({
+            data: {
+                activity_id: item.activity_id,
+                user_uid: firebase_uid,
+                number_sentence: item.number_sentence,
+                sentences_informed: item.sentences_informed,
+                comments: ''
+            }
+        }).then().catch(async (value) => {
+            console.log(value)
+
+            var ssql = "delete from activity_sentences_users_response where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
             await prisma.$executeRawUnsafe(ssql).then().catch();
 
             ssql = "delete from activity_question_users where activity_id = '" + item.activity_id + "' and user_uid = '" + firebase_uid + "'"
@@ -437,10 +507,24 @@ routes.get('/activity/:id/users/response/finished', async (req, res) => {
         })
     } 
 
-    var ssql = "select au.id as id_response_user, ar.id as id_response_created, au.activity_id, au.user_uid, au.number_question,"
-    .concat(" au.answer as response_user, ar.right_answer as response_correcty, ar.question, ar.answer_one,  ar.answer_two,  ar.answer_tree,  ar.answer_four")
-    .concat(" from activity_question_users_response au inner join activity_question_response ar on(au.activity_id = ar.activity_id and au.number_question = ar.number_question)")
-    .concat(" where au.activity_id = '" + id + "' and au.user_uid = '" + firebase_uid + "' order by au.number_question asc")
+    const activity = await prisma.activity.findUnique({
+        where: {
+            id: parseInt(id)
+        }
+    })
+
+    var ssql = "";
+    if(activity.type_activity == 'questions'){
+        ssql = "select au.id as id_response_user, ar.id as id_response_created, au.activity_id, au.user_uid, au.number_question,"
+        .concat(" au.answer as response_user, ar.right_answer as response_correcty, ar.question, ar.answer_one,  ar.answer_two,  ar.answer_tree,  ar.answer_four, au.comments")
+        .concat(" from activity_question_users_response au inner join activity_question_response ar on(au.activity_id = ar.activity_id and au.number_question = ar.number_question)")
+        .concat(" where au.activity_id = '" + id + "' and au.user_uid = '" + firebase_uid + "' order by au.number_question asc")
+    }else if(activity.type_activity == 'sentences'){
+        ssql = "select au.id as id_response_user, ar.id as id_response_created, au.activity_id, au.user_uid, au.number_sentence,"
+        .concat(" sem_acentos(au.sentences_informed) as response_user, sem_acentos(ar.hidden_words) as response_correcty, ar.complete_sentence, ar.marked_sentence,  ar.words_help, au.comments")
+        .concat(" from activity_sentences_users_response au inner join activity_sentences ar on(au.activity_id = ar.activity_id and au.number_sentence = ar.number_sentence)")
+        .concat(" where au.activity_id = '" + id + "' and au.user_uid = '" + firebase_uid + "' order by au.number_sentence asc")
+    }
 
     await prisma.$queryRawUnsafe(ssql)
     .then((json) => {
@@ -537,7 +621,7 @@ routes.put('/activity/:id/password', async (req, res) => {
         })
     }).catch((values) => {
         return res.status(500).json({
-            error_message: 'Error activity ' + values
+            error_message: 'Error activity'
         })
     })
 })
@@ -568,5 +652,162 @@ routes.get('/activity/:id/done', async (req, res) => {
         return res.status(500).json(error)
     })       
 }) 
+
+routes.put('/activity/:id/comment/:number', async (req, res) => {
+    const { id, number } = req.params
+    const firebase_uid = req.header('firebase_uid');
+    const { comment, user_uid } = req.body;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: user'
+        })
+    } 
+
+    if(!comment){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: comment'
+        })
+    } 
+
+    if(!number){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: number'
+        })
+    } 
+
+    if(!id){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: id'
+        })
+    } 
+
+    const activity = await prisma.activity.findUnique({
+        where: {
+            id: parseInt(id)
+        }
+    })
+
+    var ssql = "";
+    if(activity.type_activity == 'questions'){
+        ssql = "update activity_question_users_response set comments = '" + comment + "' where activity_id = '" + id + "' and user_uid = '" + user_uid + "' and number_question = '" + number + "'"
+    }else if(activity.type_activity == 'sentences'){
+        ssql = "update activity_sentences_users_response set comments = '" + comment + "' where activity_id = '" + id + "' and user_uid = '" + user_uid + "' and number_sentence = '" + number + "'"
+    }
+  
+    await prisma.$executeRawUnsafe(ssql).then(() => {
+        return res.status(200).json({
+            message: 'comment added'
+        })
+    }).catch((values) => {
+        return res.status(500).json({
+            error_message: 'Error comment added'
+        })
+    })
+})
+
+routes.put('/activity/:id/display/user', async (req, res) => {
+    const { id } = req.params
+    const firebase_uid = req.header('firebase_uid');
+    const { user_uid } = req.body;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: user'
+        })
+    }  
+
+    if(!id){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: id'
+        })
+    } 
+
+    if(!user_uid){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: user_uid'
+        })
+    } 
+    
+    var ssql = "update activity_question_users set display_to_user = '1' where activity_id = '" + id + "' and user_uid = '" + user_uid + "'"
+    
+    await prisma.$executeRawUnsafe(ssql).then(() => {
+        return res.status(200).json({
+            message: 'displayed to user'
+        })
+    }).catch((values) => {
+        return res.status(500).json({
+            error_message: 'Error displayed to user'
+        })
+    })
+})
+
+routes.get('/activity/:id/comment/:number/user/:useruid', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { id, number, useruid } = req.params
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: user'
+        })
+    }   
+    
+    if(!id){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: id'
+        })
+    } 
+
+    if(!useruid){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: user_uid'
+        })
+    }
+
+    if(!number){
+        return res.status(403).json({
+            error_message: 'The server refused the request - reason: number'
+        })
+    }  
+
+    const activity = await prisma.activity.findUnique({
+        where: {
+            id: parseInt(id)
+        }
+    })
+
+    var ssql = "";
+    if(activity.type_activity == 'questions'){
+        ssql = "select comments from activity_question_users_response where activity_id = '" + id + "' and user_uid = '" + useruid + "' and number_question = '" + number + "'"
+    }else if(activity.type_activity == 'sentences'){
+        ssql = "select comments from activity_sentences_users_response where activity_id = '" + id + "' and user_uid = '" + useruid + "' and number_sentence = '" + number +"'"
+    }
+
+    await prisma.$queryRawUnsafe(ssql)
+    .then((json) => {        
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })       
+})
 
 module.exports = routes;
