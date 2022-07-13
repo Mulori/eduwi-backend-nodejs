@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 routes.post('/users', async (req, res) => {
     const key_auth_pub = req.header('key_auth');
-    const { firebase_uid, email, name, last_name } = req.body;
+    const { firebase_uid, email, name, last_name, avatar, avatar_format } = req.body;
     const key_auth = process.env.KEY_AUTH;
     
     if(key_auth_pub !== key_auth){
@@ -16,7 +16,7 @@ routes.post('/users', async (req, res) => {
         })
     }
 
-    if(!firebase_uid || !email || !name || !last_name){
+    if(!firebase_uid || !email || !name || !last_name || !avatar || !avatar_format){
         return res.status(400).json({
             error_message: 'Incorrect request'
         })
@@ -28,6 +28,8 @@ routes.post('/users', async (req, res) => {
             email: email,
             name: name,
             last_name: last_name,
+            avatar_base64: avatar,
+            avatar_format: avatar_format
         }
     }).then(() => {
         return res.status(200).json({
