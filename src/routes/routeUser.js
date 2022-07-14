@@ -64,13 +64,15 @@ routes.put('/users/image', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
     const { avatar, avatar_format } = req.body;
 
+    console.log(firebase_uid)
+
     const valid = await prisma.users.findUnique({
         where: {
             firebase_uid: firebase_uid
         }
     })
 
-    if(!avatar || !avatar_format){
+    if(!valid || !avatar || !avatar_format){
         return res.status(400).json({
             error_message: 'Incorrect request'
         })
@@ -84,7 +86,7 @@ routes.put('/users/image', async (req, res) => {
         })
     }).catch((values) => {
         return res.status(500).json({
-            error_message: 'Error activity'
+            error_message: 'Error Image Changed'
         })
     })
 })
