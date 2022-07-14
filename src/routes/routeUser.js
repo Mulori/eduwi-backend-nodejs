@@ -64,8 +64,6 @@ routes.put('/users/image', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
     const { avatar, avatar_format } = req.body;
 
-    console.log(firebase_uid)
-
     const valid = await prisma.users.findUnique({
         where: {
             firebase_uid: firebase_uid
