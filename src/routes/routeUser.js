@@ -60,5 +60,35 @@ if(!valid){
     return res.status(200).json(valid);
 })
 
+routes.put('/users/image', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { avatar, avatar_format } = req.body;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!avatar || !avatar_format){
+        return res.status(400).json({
+            error_message: 'Incorrect request'
+        })
+    }
+
+    var ssql = "update users set avatar_base64 = '" + avatar + "', avatar_format = '" + avatar_format + "' where firebase_uid = '" + firebase_uid + "'";
+
+    await prisma.$executeRawUnsafe(ssql).then(() => {
+        return res.status(200).json({
+            message: 'Image Changed'
+        })
+    }).catch((values) => {
+        return res.status(500).json({
+            error_message: 'Error activity'
+        })
+    })
+})
+
+
 
 module.exports = routes;
