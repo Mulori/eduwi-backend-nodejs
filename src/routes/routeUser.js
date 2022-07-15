@@ -40,6 +40,34 @@ routes.post('/users', async (req, res) => {
     })
 })
 
+routes.post('/users/email/exist', async (req, res) => {
+    const key_auth_pub = req.header('key_auth');
+    const { email } = req.body;
+    const key_auth = process.env.KEY_AUTH;
+    
+    if(key_auth_pub !== key_auth){
+        return res.status(400).json({
+            error_message: 'The server refused the request'
+        })
+    }
+
+    if(!email){
+        return res.status(400).json({
+            error_message: 'Incorrect request'
+        })
+    }
+
+    const ssql = "select email from users where email = '" + email + "'";
+
+    await prisma.$queryRawUnsafe(ssql)
+    .then((json) => {        
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    }) 
+})
+
 routes.get('/users', async (req, res) => {
 const firebase_uid = req.header('firebase_uid');
 
