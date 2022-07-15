@@ -14,8 +14,10 @@ model users {
   name                              String?                             @db.VarChar(50)
   last_name                         String?                             @db.VarChar(50)
   score                             Decimal?                            @default(0) @db.Decimal(20, 0)
-  avatar_base64                     String?
-  avatar_format                     String?                             @db.VarChar(50)
+  image_reference                   String?                             @db.VarChar(1000)
+  image_url                         String?                             @db.VarChar(5000)
+  image_type                        String?                             @db.VarChar(5000)
+  image_size_wh                     String?                             @db.VarChar(5000)
   activity                          activity[]
   activity_question_users           activity_question_users[]
   activity_question_users_response  activity_question_users_response[]

@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 routes.post('/users', async (req, res) => {
     const key_auth_pub = req.header('key_auth');
-    const { firebase_uid, email, name, last_name, avatar, avatar_format } = req.body;
+    const { firebase_uid, email, name, last_name } = req.body;
     const key_auth = process.env.KEY_AUTH;
     
     if(key_auth_pub !== key_auth){
@@ -16,7 +16,7 @@ routes.post('/users', async (req, res) => {
         })
     }
 
-    if(!firebase_uid || !email || !name || !last_name || !avatar || !avatar_format){
+    if(!firebase_uid || !email || !name || !last_name){
         return res.status(400).json({
             error_message: 'Incorrect request'
         })
@@ -28,8 +28,6 @@ routes.post('/users', async (req, res) => {
             email: email,
             name: name,
             last_name: last_name,
-            avatar_base64: avatar,
-            avatar_format: avatar_format
         }
     }).then(() => {
         return res.status(200).json({
@@ -62,7 +60,7 @@ if(!valid){
 
 routes.put('/users/image', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
-    const { avatar, avatar_format } = req.body;
+    const { image_reference, image_url, image_type, image_size_wh } = req.body;
 
     const valid = await prisma.users.findUnique({
         where: {
@@ -70,13 +68,13 @@ routes.put('/users/image', async (req, res) => {
         }
     })
 
-    if(!valid || !avatar || !avatar_format){
+    if(!valid || !image_reference || !image_url || !image_type || !image_size_wh){
         return res.status(400).json({
             error_message: 'Incorrect request'
         })
     }
 
-    var ssql = "update users set avatar_base64 = '" + avatar + "', avatar_format = '" + avatar_format + "' where firebase_uid = '" + firebase_uid + "'";
+    var ssql = "update users set image_reference = '" + image_reference + "', image_url = '" + image_url + "', image_type = '" + image_type + "', image_size_wh = '" + image_size_wh + "' where firebase_uid = '" + firebase_uid + "'";
 
     await prisma.$executeRawUnsafe(ssql).then(() => {
         return res.status(200).json({
