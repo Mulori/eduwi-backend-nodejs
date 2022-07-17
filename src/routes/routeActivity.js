@@ -21,7 +21,7 @@ routes.get('/activity', async (req, res) => {
         })
     }    
 
-    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password, (select count(id) from activity_question_users where activity_id = a.id) as number_members from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null order by number_members desc limit 30";
+    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password, (select count(id) from activity_question_users where activity_id = a.id) as number_members, a.image_reference, a.image_url from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null order by number_members desc limit 30";
 
     await prisma.$queryRawUnsafe(ssql1)
     .then((json) => {
@@ -47,7 +47,7 @@ routes.get('/activity/users', async (req, res) => {
         })
     }    
 
-    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password, a.created, (select count(id) from activity_question_users where activity_id = a.id) as number_members from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null and a.author_uid = '" + firebase_uid + "' order by number_members desc limit 30";
+    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password, a.created, (select count(id) from activity_question_users where activity_id = a.id) as number_members, a.image_reference, a.image_url from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null and a.author_uid = '" + firebase_uid + "' order by number_members desc limit 30";
 
     await prisma.$queryRawUnsafe(ssql1)
     .then((json) => {
@@ -73,7 +73,7 @@ routes.get('/activity/user/finished', async (req, res) => {
         })
     }   
 
-    const ssql1 = "select a.id, a.author_uid, a.title, a.type_activity, aqu.created as replied_in from activity_question_users aqu inner join activity a on(aqu.activity_id = a.id) where a.excluded is null and aqu.user_uid = '" + firebase_uid + "' and aqu.display_to_user = '1'";
+    const ssql1 = "select a.id, a.author_uid, a.title, a.type_activity, aqu.created as replied_in, a.image_reference, a.image_url from activity_question_users aqu inner join activity a on(aqu.activity_id = a.id) where a.excluded is null and aqu.user_uid = '" + firebase_uid + "' and aqu.display_to_user = '1'";
 
     await prisma.$queryRawUnsafe(ssql1)
     .then((json) => {
@@ -86,7 +86,7 @@ routes.get('/activity/user/finished', async (req, res) => {
 
 routes.post('/activity', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
-    const { title, password, type_activity } = req.body;
+    const { title, password, type_activity, image_reference, image_url, image_type, image_size_wh } = req.body;
     const with_password = 1;
 
     var utc = new Date()
@@ -103,7 +103,7 @@ routes.post('/activity', async (req, res) => {
         })
     } 
 
-    if(!title || !type_activity){
+    if(!title || !type_activity || !image_reference || !image_url || !image_type || !image_size_wh){
         return res.status(400).json({
             error_message: 'Bad Request post activity'
         })
@@ -116,7 +116,11 @@ routes.post('/activity', async (req, res) => {
             with_password: password === "" ? 0 : 1,
             password: md5(password),
             type_activity: type_activity,
-            created: utc
+            created: utc,
+            image_reference: image_reference,
+            image_url: image_url,
+            image_type: image_type,
+            image_size_wh: image_size_wh
         }
     }).then((value) => {
         return res.status(200).json(value)
@@ -412,7 +416,7 @@ routes.get('/activity/:id', async (req, res) => {
     try{
         const id_ascii = Buffer.from(id, 'base64').toString('ascii');
 
-        await prisma.$queryRawUnsafe("select a.id, a.author_uid, a.title, a.with_password, a.password, u.name || ' ' || u.last_name as name, a.type_activity from activity a inner join users u on(a.author_uid = u.firebase_uid) where a.id = '" + id_ascii + "' and a.excluded is null limit 1")
+        await prisma.$queryRawUnsafe("select a.id, a.author_uid, a.title, a.with_password, a.password, u.name || ' ' || u.last_name as name, a.type_activity, a.image_reference, a.image_url from activity a inner join users u on(a.author_uid = u.firebase_uid) where a.id = '" + id_ascii + "' and a.excluded is null limit 1")
         .then((json) => {
 
             if(json.toString() === ''){
@@ -509,7 +513,7 @@ routes.get('/activity/:id/users/concluded', async (req, res) => {
         })
     } 
 
-    var ssql = "select aqu.id, aqu.activity_id, u.id, aqu.user_uid, u.email, u.name || ' ' || u.last_name as full_name, aqu.value from activity_question_users aqu inner join users u on u.firebase_uid = aqu.user_uid where aqu.activity_id = '" + id + "'"
+    var ssql = "select aqu.id, aqu.activity_id, u.id, aqu.user_uid, u.email, u.name || ' ' || u.last_name as full_name, aqu.value, u.image_reference, u.image_url from activity_question_users aqu inner join users u on u.firebase_uid = aqu.user_uid where aqu.activity_id = '" + id + "'"
 
     await prisma.$queryRawUnsafe(ssql)
     .then((json) => {
