@@ -109,6 +109,11 @@ routes.post('/activity', async (req, res) => {
         })
     }
 
+    console.log(image_reference)
+    console.log(image_url)
+    console.log(image_type)
+    console.log(image_size_wh)
+
     await prisma.activity.create({
         data: {
             author_uid: firebase_uid,
