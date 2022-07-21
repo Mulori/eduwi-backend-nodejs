@@ -48,6 +48,7 @@ model activity {
   image_url                         String?                             @db.VarChar(5000)
   image_type                        String?                             @db.VarChar(100)
   image_size_wh                     String?                             @db.VarChar(50)
+  difficulty_level                  String?                             @db.VarChar(30)
   users                             users                               @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_author_activity")
   activity_question_response        activity_question_response[]
   activity_question_users           activity_question_users[]
