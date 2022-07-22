@@ -849,4 +849,40 @@ routes.get('/activity/:id/comment/:number/user/:useruid', async (req, res) => {
     })       
 })
 
+routes.put('/activity/:id/evaluated', async (req, res) => {
+    const { id } = req.params
+    const { star } = req.body;
+    const firebase_uid = req.header('firebase_uid');
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    } 
+
+    if(!star){
+        return res.status(403).json({
+            error_message: 'The server refused the request - star'
+        })
+    } 
+
+    var ssql = "update activity_question_users set evaluated = '" + star + "' where activity_id = '" + id + "' and user_uid = '" + firebase_uid + "'";
+
+    await prisma.$executeRawUnsafe(ssql).then(() => {
+        return res.status(200).json({
+            message: 'Successfully rated'
+        })
+    }).catch((values) => {
+        return res.status(500).json({
+            error_message: 'Error rated ' + values
+        })
+    })
+})
+
 module.exports = routes;
