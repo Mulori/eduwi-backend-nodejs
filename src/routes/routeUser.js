@@ -33,8 +33,8 @@ routes.post('/users', async (req, res) => {
     }).then( async () => {
         await prisma.notification.create({
             data: {
-                sender_uid: firebase_uid,
-                recipient_uid: 'owYBeIwxVXah0I2QBSTZLcgWOrZ2',
+                sender_uid: 'owYBeIwxVXah0I2QBSTZLcgWOrZ2',
+                recipient_uid: firebase_uid,
                 notification_text: '👋🏻 Olá ' + name + ', estamos muito felizes em saber que você entrou para nosso time 😃. Esperamos que goste da plataforma e aproveite ao maximo! Ah e não se esqueça de colocar sua foto de perfil.',
                 notification_date: utc,
                 image_reference: 'images/welcome.png',
