@@ -18,16 +18,12 @@ routes.get('/notification', async (req, res) => {
         return res.status(403).json({
             error_message: 'The server refused the request'
         })
-    }           
+    }    
+    
+    var ssql = "select u.name, u.last_name, u.image_url, n.* from notification n inner join users u on(u.firebase_uid = n.sender_uid)"
+    ssql.concat(" where recipient_uid = '" + firebase_uid + "' order by notification_date desc limit 50")
 
-    await prisma.notification.findMany({
-        where: [
-            { recipient_uid: firebase_uid }
-        ],
-        orderBy: [
-            { notification_date: 'desc' },
-        ]
-    })
+    await prisma.$queryRawUnsafe(ssql)
     .then((json) => {
         return res.status(200).json(json)
     })
