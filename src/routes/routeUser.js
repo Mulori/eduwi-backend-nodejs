@@ -35,7 +35,7 @@ routes.post('/users', async (req, res) => {
             data: {
                 sender_uid: firebase_uid,
                 recipient_uid: 'owYBeIwxVXah0I2QBSTZLcgWOrZ2',
-                notification_text: 'Olá ' + name + ', estamos muito felizes em saber que você entrou para nosso time. Esperamos que goste da plataforma e aproveite ao maximo! Ah e não se esqueça de colocar sua foto de perfil.',
+                notification_text: '👋🏻 Olá ' + name + ', estamos muito felizes em saber que você entrou para nosso time 😃. Esperamos que goste da plataforma e aproveite ao maximo! Ah e não se esqueça de colocar sua foto de perfil.',
                 notification_date: utc,
                 image_reference: 'images/welcome.png',
                 image_url: 'https://firebasestorage.googleapis.com/v0/b/eduwi-64db3.appspot.com/o/images%2Fwelcome.png?alt=media&token=dc03915c-1db8-4a6d-a45f-922b16c367ed',
