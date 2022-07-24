@@ -23,6 +23,7 @@ model users {
   activity_question_users_response  activity_question_users_response[]
   activity_sentences_users          activity_sentences_users[]
   activity_sentences_users_response activity_sentences_users_response[]
+  notification                      notification[]
   reward_users                      reward_users[]
 }
 
@@ -78,6 +79,7 @@ model activity_question_users {
   processed       Int?
   created         DateTime? @db.Timestamp(6)
   display_to_user Int?
+  evaluated       Int?
   activity        activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
   users           users?    @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
 }
@@ -141,4 +143,17 @@ model activity_sentences_users_response {
   comments           String?   @db.VarChar(500)
   activity           activity? @relation(fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_activity_id")
   users              users?    @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
+}
+
+model notification {
+  id                Int      @id @default(autoincrement())
+  sender_uid        String   @db.VarChar(2000)
+  recipient_uid     String   @db.VarChar(2000)
+  notification_text String   @db.VarChar(1000)
+  notification_date DateTime @db.Timestamp(6)
+  image_reference   String?  @db.VarChar(1000)
+  image_url         String?  @db.VarChar(5000)
+  image_type        String?  @db.VarChar(100)
+  image_size_wh     String?  @db.VarChar(50)
+  users             users    @relation(fields: [sender_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "pk_sender")
 }

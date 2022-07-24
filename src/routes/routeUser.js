@@ -9,6 +9,7 @@ routes.post('/users', async (req, res) => {
     const key_auth_pub = req.header('key_auth');
     const { firebase_uid, email, name, last_name } = req.body;
     const key_auth = process.env.KEY_AUTH;
+    var utc = new Date()
     
     if(key_auth_pub !== key_auth){
         return res.status(400).json({
@@ -29,13 +30,28 @@ routes.post('/users', async (req, res) => {
             name: name,
             last_name: last_name,
         }
-    }).then(() => {
+    }).then( async () => {
+        await prisma.notification.create({
+            data: {
+                sender_uid: firebase_uid,
+                recipient_uid: 'owYBeIwxVXah0I2QBSTZLcgWOrZ2',
+                notification_text: 'Olá ' + name + ', estamos muito felizes em saber que você entrou para nosso time. Esperamos que goste da plataforma e aproveite ao maximo! Ah e não se esqueça de colocar sua foto de perfil.',
+                notification_date: utc,
+                image_reference: 'images/welcome.png',
+                image_url: 'https://firebasestorage.googleapis.com/v0/b/eduwi-64db3.appspot.com/o/images%2Fwelcome.png?alt=media&token=dc03915c-1db8-4a6d-a45f-922b16c367ed',
+                image_type: 'image/png',
+                image_size_wh: ''
+            }
+        })
+        .then()
+        .catch()
+
         return res.status(200).json({
             message: 'User created'
         })
-    }).catch(() => {
+    }).catch((value) => {
         return res.status(500).json({
-            error_message: 'Error creating user'
+            error_message: 'Error creating user ' + value
         })
     })
 })
