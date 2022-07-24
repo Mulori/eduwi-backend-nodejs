@@ -10,7 +10,8 @@
     "md5": "^2.3.0",
     "nodemon": "^2.0.15",
     "pg": "^8.7.1",
-    "pg-hstore": "^2.3.4"
+    "pg-hstore": "^2.3.4",
+    "yarn": "^1.22.19"
   },
   "name": "eduwi-nodejs",
   "version": "1.0.0",
