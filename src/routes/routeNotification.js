@@ -21,6 +21,9 @@ routes.get('/notification', async (req, res) => {
     }           
 
     await prisma.notification.findMany({
+        where: [
+            { recipient_uid: firebase_uid }
+        ],
         orderBy: [
             { notification_date: 'desc' },
         ]
