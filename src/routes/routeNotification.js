@@ -20,7 +20,7 @@ routes.get('/notification', async (req, res) => {
         })
     }    
     
-    var ssql = "select u.name, u.last_name, u.image_url, n.* from notification n inner join users u on(u.firebase_uid = n.sender_uid)"
+    var ssql = "select u.user_name, u.user_last_name, u.user_image_url, n.* from notification n inner join users u on(u.firebase_uid = n.sender_uid)"
     ssql.concat(" where recipient_uid = '" + firebase_uid + "' order by notification_date desc limit 50")
 
     await prisma.$queryRawUnsafe(ssql)
