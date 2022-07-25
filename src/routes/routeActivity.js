@@ -284,7 +284,7 @@ routes.post('/activity/question/users', async (req, res) => {
                 sender_uid: firebase_uid,
                 recipient_uid: valid_activity.author_uid,
                 notification_text: 'Realizou a atividade: "' + valid_activity.title + '"',
-                notification_date: utc,
+                notification_date: now,
                 image_reference: 'images/welcome.png',
                 image_url: 'https://firebasestorage.googleapis.com/v0/b/eduwi-64db3.appspot.com/o/images%2Factivity_concluded.png?alt=media&token=6f391a15-5f09-4db5-bd41-c851f12d5c37',
                 image_type: 'image/png',
@@ -299,7 +299,7 @@ routes.post('/activity/question/users', async (req, res) => {
         })
     }).catch((value) => {
         return res.status(500).json({
-            error_message: 'Error activity user '
+            error_message: 'Error activity user ' + value
         })
     })
 })
