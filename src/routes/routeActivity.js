@@ -227,7 +227,7 @@ routes.post('/activity/sentences', async (req, res) => {
 
 routes.post('/activity/question/users', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
-    const { activity_id, created } = req.body;
+    const { activity_id } = req.body;
     var now = new Date();
 
     const valid = await prisma.users.findUnique({
@@ -236,9 +236,21 @@ routes.post('/activity/question/users', async (req, res) => {
         }
     })
 
+    const valid_activity = await prisma.activity.findUnique({
+        where: {
+            id: activity_id
+        }
+    })
+
+    if(!valid_activity){
+        return res.status(403).json({
+            error_message: 'The server refused the request - id activity'
+        })
+    } 
+
     if(!valid){
         return res.status(403).json({
-            error_message: 'The server refused the request'
+            error_message: 'The server refused the request - user'
         })
     } 
 
@@ -267,6 +279,21 @@ routes.post('/activity/question/users', async (req, res) => {
             display_to_user: 0
         }
     }).then(() => {
+        await prisma.notification.create({
+            data: {
+                sender_uid: firebase_uid,
+                recipient_uid: valid_activity.author_uid,
+                notification_text: 'Realizou a atividade: "' + valid_activity.title + '"',
+                notification_date: utc,
+                image_reference: 'images/welcome.png',
+                image_url: 'https://firebasestorage.googleapis.com/v0/b/eduwi-64db3.appspot.com/o/images%2Factivity_concluded.png?alt=media&token=6f391a15-5f09-4db5-bd41-c851f12d5c37',
+                image_type: 'image/png',
+                image_size_wh: ''
+            }
+        })
+        .then()
+        .catch()
+
         return res.status(200).json({
             message: 'User entered in activity'
         })
