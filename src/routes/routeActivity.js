@@ -519,7 +519,7 @@ routes.get('/activity/:id/users/concluded', async (req, res) => {
         })
     } 
 
-    var ssql = "select aqu.id, aqu.activity_id, u.id, aqu.user_uid, u.email, u.name || ' ' || u.last_name as full_name, aqu.value, u.image_reference, u.image_url, a.difficulty_level from activity_question_users aqu inner join users u on u.firebase_uid = aqu.user_uid where aqu.activity_id = '" + id + "'"
+    var ssql = "select aqu.id, aqu.activity_id, u.id, aqu.user_uid, u.email, u.name || ' ' || u.last_name as full_name, aqu.value, u.image_reference, u.image_url from activity_question_users aqu inner join users u on u.firebase_uid = aqu.user_uid where aqu.activity_id = '" + id + "'"
 
     await prisma.$queryRawUnsafe(ssql)
     .then((json) => {
