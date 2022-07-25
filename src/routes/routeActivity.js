@@ -278,7 +278,7 @@ routes.post('/activity/question/users', async (req, res) => {
             created: now,
             display_to_user: 0
         }
-    }).then(() => {
+    }).then(async () => {
         await prisma.notification.create({
             data: {
                 sender_uid: firebase_uid,
