@@ -31,6 +31,33 @@ routes.get('/eduvida', async (req, res) => {
     })       
 })
 
+routes.get('/eduvida/:id/comments', async (req, res) => {
+    const firebase_uid = req.header('firebase_uid');
+    const { id } = req.params;
+
+    const valid = await prisma.users.findUnique({
+        where: {
+            firebase_uid: firebase_uid
+        }
+    })
+
+    if(!valid){
+        return res.status(403).json({
+            error_message: 'The server refused the request'
+        })
+    }           
+
+    var ssql = 'select ec.id, u.firebase_uid, ec.comment, ec.created, u.name, u.last_name, u.image_url as image_user from eduvida_comment ec inner join users u on(ec.user_uid = u.firebase_uid) where ec.eduvida_id = ' + id + ' order by ec.created asc'
+
+    await prisma.$queryRawUnsafe(ssql)
+    .then((json) => {
+        return res.status(200).json(json)
+    })
+    .catch((error) => {
+        return res.status(500).json(error)
+    })       
+})
+
 routes.post('/eduvida', async (req, res) => {
     const firebase_uid = req.header('firebase_uid');
     const { title, help_text, help_type, image_reference, image_url, image_type, image_size_wh } = req.body;
