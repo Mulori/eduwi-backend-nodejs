@@ -21,7 +21,7 @@ routes.get('/activity', async (req, res) => {
         })
     }    
 
-    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password, (select count(id) from activity_question_users where activity_id = a.id) as number_members, a.image_reference, a.image_url, a.difficulty_level from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null order by number_members desc limit 30";
+    const ssql1 = "select a.id, a.author_uid, a.title, a.with_password, a.type_activity, u.name || ' ' || u.last_name as name, a.password, (select count(id) from activity_question_users where activity_id = a.id) as number_members, a.image_reference, a.image_url, a.difficulty_level, (select (sum(evaluated) / count(id))  from activity_question_users where activity_id = a.id) as stars from activity a inner join users u on(a.author_uid = u.firebase_uid) where excluded is null order by number_members desc limit 30";
 
     await prisma.$queryRawUnsafe(ssql1)
     .then((json) => {

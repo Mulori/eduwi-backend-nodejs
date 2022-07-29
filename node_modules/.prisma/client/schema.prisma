@@ -23,6 +23,8 @@ model users {
   activity_question_users_response  activity_question_users_response[]
   activity_sentences_users          activity_sentences_users[]
   activity_sentences_users_response activity_sentences_users_response[]
+  eduvida                           eduvida[]
+  eduvida_comment                   eduvida_comment[]
   notification                      notification[]
   reward_users                      reward_users[]
 }
@@ -156,4 +158,34 @@ model notification {
   image_type        String?  @db.VarChar(100)
   image_size_wh     String?  @db.VarChar(50)
   users             users    @relation(fields: [sender_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "pk_sender")
+}
+
+model eduvida {
+  id              Int               @id @default(autoincrement())
+  author_uid      String            @db.VarChar(2000)
+  title           String            @db.VarChar(50)
+  help_text       String            @db.VarChar(500)
+  help_type       String?           @db.VarChar(50)
+  help_close      Int
+  created         DateTime          @db.Timestamp(6)
+  image_reference String?           @db.VarChar(1000)
+  image_url       String?           @db.VarChar(5000)
+  image_type      String?           @db.VarChar(100)
+  image_size_wh   String?           @db.VarChar(50)
+  users           users             @relation(fields: [author_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "pk_author")
+  eduvida_comment eduvida_comment[]
+}
+
+model eduvida_comment {
+  id              Int      @id @default(autoincrement())
+  eduvida_id      Int?
+  user_uid        String?  @db.VarChar(2000)
+  comment         String   @db.VarChar(500)
+  created         DateTime @db.Timestamp(6)
+  image_reference String?  @db.VarChar(1000)
+  image_url       String?  @db.VarChar(5000)
+  image_type      String?  @db.VarChar(100)
+  image_size_wh   String?  @db.VarChar(50)
+  eduvida         eduvida? @relation(fields: [eduvida_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_eduvida_id")
+  users           users?   @relation(fields: [user_uid], references: [firebase_uid], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_uid")
 }
