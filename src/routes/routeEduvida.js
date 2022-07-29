@@ -20,7 +20,7 @@ routes.get('/eduvida', async (req, res) => {
         })
     }           
 
-    var ssql = 'select e.id, u.firebase_uid, e.title, e.help_type, e.created, u.name, u.last_name, u.image_url from eduvida e inner join users u on(e.author_uid = u.firebase_uid) where e.help_close = 0 order by e.created desc'
+    var ssql = 'select e.id, u.firebase_uid, e.title, e.help_text, e.help_type, e.created, u.name, u.last_name, u.image_url from eduvida e inner join users u on(e.author_uid = u.firebase_uid) where e.help_close = 0 order by e.created desc'
 
     await prisma.$queryRawUnsafe(ssql)
     .then((json) => {
